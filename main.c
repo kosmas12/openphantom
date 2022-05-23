@@ -29,7 +29,7 @@ OpenPhantomImage image;
 void Init() {
 
     // In case of error, the returned pixelData is NULL
-    image = OpenPhantom_LoadImage("openphantom.bmp");
+    image = OpenPhantom_LoadImage("openphantom24.bmp");
     if (!image.pixelData) {
         // More info can be fetched with OpenPhantom_GetError()
         printf("Couldn't load image: %s\n", OpenPhantom_GetError());
@@ -54,17 +54,39 @@ void drawImage() {
     // By default, bitmaps are inverted due to how they're stored.
     OpenPhantom_InvertImageVertically(&image);
 
-    // Directly copy the pixel data
-    SDL_LockSurface(windowSurface);
-    uint32_t *pixels = windowSurface->pixels;
+    SDL_PixelFormatEnum format;
 
-    for (int y = 0; y < image.height; ++y) {
-        for (int x = 0; x < image.width; ++x) {
-            int pixelPosition = y * image.width + x;
-            pixels[pixelPosition] = image.pixelData[pixelPosition];
-        }
+    switch (image.depth) {
+        // 32-bit color palette used for anything else (not supported yet by OpenPhantom)
+        case 1:
+        case 2:
+        case 4:
+        case 8:
+        case 32:
+            format = SDL_PIXELFORMAT_ARGB8888;
+            break;
+        case 16:
+            format = SDL_PIXELFORMAT_RGB565;
+            break;
+        case 24:
+            format = SDL_PIXELFORMAT_RGB24;
+            break;
     }
-    SDL_UnlockSurface(windowSurface);
+
+    SDL_Surface *imageSurface = SDL_ConvertSurfaceFormat(windowSurface, format, 0);
+
+    // Directly copy the pixel data
+    SDL_LockSurface(imageSurface);
+    uint8_t *pixels = imageSurface->pixels;
+
+    int bytesPerPixel = image.depth / 8;
+
+    for (int i = 0; i < image.width * image.height * bytesPerPixel; ++i) {
+        pixels[i] = ((uint8_t *) image.pixelData)[i];
+    }
+
+    SDL_UnlockSurface(imageSurface);
+    SDL_BlitSurface(imageSurface, NULL, windowSurface, NULL);
     SDL_UpdateWindowSurface(window);
 }
 

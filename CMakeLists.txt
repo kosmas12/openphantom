@@ -7,4 +7,5 @@ FIND_PACKAGE(SDL2 REQUIRED)
 
 add_executable(openphantom main.c include/openphantom.c)
 
+target_include_directories(${PROJECT_NAME} PRIVATE ${SDL2_INCLUDE_DIRS})
 target_link_libraries(openphantom ${SDL2_LIBRARIES})

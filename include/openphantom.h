@@ -28,14 +28,14 @@ extern "C" {
 
 typedef struct {
     // TODO: use void* instead of uint32_t* for flexibility
-    uint32_t *pixelData;
-    long size;
+    void *pixelData;
+    uint16_t depth;
     int width;
     int height;
 }OpenPhantomImage;
 
 OpenPhantomImage OpenPhantom_ReturnErrImage();
-void OpenPhantom_SetError(const char *error);
+void OpenPhantom_SetError(char *error);
 char *OpenPhantom_GetError();
 void OpenPhantom_InvertImageVertically(OpenPhantomImage *image);
 OpenPhantomImage OpenPhantom_LoadBMP(FILE *f);

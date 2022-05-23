@@ -27,13 +27,12 @@ char *OpenPhantomLastError;
 OpenPhantomImage OpenPhantom_ReturnErrImage() {
     OpenPhantomImage image;
     image.pixelData = NULL;
-    image.size = 0;
     image.width = 0;
     image.height = 0;
     return image;
 }
 
-void OpenPhantom_SetError(const char *error) {
+void OpenPhantom_SetError(char *error) {
     OpenPhantomLastError = error;
 }
 
@@ -45,20 +44,24 @@ char *OpenPhantom_GetError() {
 void OpenPhantom_InvertImageVertically(OpenPhantomImage *image) {
     int i = 0;
     int numPixels = (image->width * image->height);
+    int bytesPerPixel = image->depth / 8;
+    if (image->depth < 8) {
+        bytesPerPixel = 1;
+    }
 
     while (i < image->height) {
-        uint32_t *topRow = &image->pixelData[i * image->width];
-        uint32_t *bottomRow = &image->pixelData[numPixels - (i * image->width) - image->width];
+        uint8_t *topRowBytes = &image->pixelData[i * image->width * bytesPerPixel];
+        uint8_t *bottomRowBytes = &image->pixelData[(numPixels - (i * image->width) - image->width) * bytesPerPixel];
 
-        for (int j = 0; j < (image->width); ++j) {
-            uint32_t tempPixel = topRow[j];
-            topRow[j] = bottomRow[j];
-            bottomRow[j] = tempPixel;
+        for (int j = 0; j < (image->width) * bytesPerPixel; ++j) {
+            uint8_t tempByte = topRowBytes[j];
+            topRowBytes[j] = bottomRowBytes[j];
+            bottomRowBytes[j] = tempByte;
         }
 
         i += 2;
-
     }
+
 }
 
 // Load bitmap image file
@@ -83,11 +86,13 @@ OpenPhantomImage OpenPhantom_LoadBMP(FILE *f) {
         return OpenPhantom_ReturnErrImage();
     }
 
-    int *width = (int *) &dataWithHeader[0x12];
-    bitmap.width = *width;
-    int *height = (int *) &dataWithHeader[0x16];
-    bitmap.height = *height;
-    bitmap.pixelData = (uint32_t *) &dataWithHeader[0x36];
+    memcpy(&bitmap.width, &dataWithHeader[0x12], sizeof(int));
+    memcpy(&bitmap.height, &dataWithHeader[0x16], sizeof(int));
+    memcpy(&bitmap.depth, &dataWithHeader[0x1C], sizeof(uint16_t));
+    int offsetToBMPData = dataWithHeader[0xA];
+    int BMPDataSize = (bitmap.width * bitmap.height * (bitmap.depth/8));
+    bitmap.pixelData = malloc(BMPDataSize);
+    memcpy(bitmap.pixelData, &dataWithHeader[offsetToBMPData], BMPDataSize);
 
     return bitmap;
 }
@@ -116,5 +121,9 @@ OpenPhantomImage OpenPhantom_LoadImage(const char *filename) {
         OpenPhantom_SetError("Unsupported image type provided");
         return OpenPhantom_ReturnErrImage();
     }
+}
+
+void OpenPhantom_GetImageAs16bpp(OpenPhantomImage image) {
 
 }
+

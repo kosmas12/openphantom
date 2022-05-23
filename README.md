@@ -2,7 +2,6 @@
 
 This is a simple library meant for image loading and
 (as a goal) manipulation. For now it only supports
-loading 24bpp bitmap files (other formats might
-work but have not been tested yet).
+loading Bitmap files with color depths of 32, 24 and 16 bits.
 
 Check main.c for example usage.

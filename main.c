@@ -29,7 +29,7 @@ OpenPhantomImage image;
 void Init() {
 
     // In case of error, the returned pixelData is NULL
-    image = OpenPhantom_LoadImage("openphantom24.bmp");
+    image = OpenPhantom_LoadImage("openphantom.bmp");
     if (!image.pixelData) {
         // More info can be fetched with OpenPhantom_GetError()
         printf("Couldn't load image: %s\n", OpenPhantom_GetError());
